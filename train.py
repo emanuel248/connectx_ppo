@@ -30,7 +30,7 @@ ENTROPY_BETA        = 0.001
 PPO_STEPS           = 256
 MINI_BATCH_SIZE     = 64
 PPO_EPOCHS          = 10
-TEST_EPOCHS         = 10
+TEST_EPOCHS         = 1
 NUM_TESTS           = 10
 TARGET_REWARD       = 2500
 
@@ -43,15 +43,22 @@ def make_env():
     return _thunk
 
     
-def test_env(env, model, device, deterministic=False):
+def test_env(env, model, device, deterministic=False, num_outputs=7):
     state = env.reset()
     done = False
     total_reward = 0
     while not done:
         state = torch.FloatTensor(state.board).unsqueeze(0).to(device)
         dist, _ = model(state)
-        action = torch.argmax(action, dim=1, keepdim=True).cpu().numpy()[0] if deterministic \
-            else torch.argmax(dist.sample(), dim=1, keepdim=True).cpu().numpy()[0]
+        dist_space = dist.sample()
+
+        #mask out invalid actions, lower 
+        neg_mask = (state[:,:num_outputs]>0)
+        dist_space[neg_mask] = dist_space.min()-3e-3
+
+        action = torch.argmax(dist_space, dim=1, keepdim=True).cpu().numpy()[0] if deterministic \
+            else torch.argmax(dist_space, dim=1, keepdim=True).cpu().numpy()[0]
+
         next_state, reward, done, _ = env.step(action)
         state = next_state
         total_reward += 0 if reward is None else reward
@@ -138,9 +145,9 @@ def ppo_update(frame_idx, states, actions, log_probs, returns, advantages, clip_
 if __name__ == "__main__":
     mkdir('.', 'checkpoints')
     parser = argparse.ArgumentParser()
-    parser.add_argument("-n", "--name", default=ENV_ID, help="Name of the run")
+    parser.add_argument("-e", "--envs", default=NUM_ENVS, help="Number of envs")
     args = parser.parse_args()
-    writer = SummaryWriter(comment="ppo_" + args.name)
+    writer = SummaryWriter(comment="ppo_connectx")
     
     # Autodetect CUDA
     use_cuda = torch.cuda.is_available()
@@ -148,7 +155,7 @@ if __name__ == "__main__":
     print('Device:', device)
     
     # Prepare environments
-    envs = [make_env() for i in range(NUM_ENVS)]
+    envs = [make_env() for i in range(args.envs)]
     envs = SubprocVecEnv(envs)
     env = ConnectX()
     obs_ = env.reset()
@@ -186,11 +193,12 @@ if __name__ == "__main__":
             neg_mask = (state[:,:num_outputs]>0)
             action[neg_mask] = action.min()-3e-3
             
-            action_ = torch.argmax(action, dim=1, keepdim=True).view(NUM_ENVS)
+            action_ = torch.argmax(action, dim=1, keepdim=True).view(args.envs)
             
             # each state, reward, done is a list of results from each parallel environment
             next_state, reward, done, _ = envs.step(action_.cpu().numpy())
             log_prob = dist.log_prob(action)
+            log_prob[neg_mask] = log_prob.min()-3e-3
             
             log_probs.append(log_prob)
             values.append(value)
@@ -221,7 +229,7 @@ if __name__ == "__main__":
         train_epoch += 1
 
         if train_epoch % TEST_EPOCHS == 0:
-            test_reward = np.mean([test_env(env, model, device) for _ in range(NUM_TESTS)])
+            test_reward = np.mean([test_env(env, model, device, num_outputs) for _ in range(NUM_TESTS)])
             writer.add_scalar("test_rewards", test_reward, frame_idx)
             print('Frame %s. reward: %s' % (frame_idx, test_reward))
             # Save a checkpoint every time we achieve a best reward
