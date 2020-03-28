@@ -145,7 +145,7 @@ def ppo_update(frame_idx, states, actions, log_probs, returns, advantages, clip_
 if __name__ == "__main__":
     mkdir('.', 'checkpoints')
     parser = argparse.ArgumentParser()
-    parser.add_argument("-e", "--envs", default=NUM_ENVS, help="Number of envs")
+    parser.add_argument("-e", "--envs", type=int, default=NUM_ENVS, help="Number of envs")
     args = parser.parse_args()
     writer = SummaryWriter(comment="ppo_connectx")
     
