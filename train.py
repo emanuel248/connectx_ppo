@@ -55,7 +55,7 @@ def test_env(env, model, device, deterministic=False):
             else torch.argmax(dist.sample(), dim=1, keepdim=True).cpu().numpy()[0]
         next_state, reward, done, _ = env.step(action)
         state = next_state
-        total_reward += reward
+        total_reward += 0 if reward is None else reward
 #        env.render()
     return total_reward
 
@@ -154,9 +154,7 @@ if __name__ == "__main__":
     env = ConnectX()
     obs_ = env.reset()
     num_inputs  = env.observation_space.n
-    print(num_inputs)
     num_outputs  = env.action_space.n
-    print(num_outputs)
 
     model = ActorCritic(num_inputs, num_outputs, HIDDEN_SIZE, std=0.001).to(device)
     print(model)
