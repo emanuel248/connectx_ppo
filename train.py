@@ -30,7 +30,7 @@ ENTROPY_BETA        = 0.001
 PPO_STEPS           = 256
 MINI_BATCH_SIZE     = 64
 PPO_EPOCHS          = 10
-TEST_EPOCHS         = 1
+TEST_EPOCHS         = 20
 NUM_TESTS           = 10
 TARGET_REWARD       = 2500
 
@@ -236,7 +236,7 @@ if __name__ == "__main__":
             if best_reward is None or best_reward < test_reward:
                 if best_reward is not None:
                     print("Best reward updated: %.3f -> %.3f" % (best_reward, test_reward))
-                    name = "%s_best_%+.3f_%d.weights" % (args.name, test_reward, frame_idx)
+                    name = "%s_best_%+.3f_%d.weights" % ("connectx", test_reward, frame_idx)
                     fname = os.path.join('.', 'checkpoints', name)
                     torch.save(model.state_dict(), fname)
                 best_reward = test_reward
