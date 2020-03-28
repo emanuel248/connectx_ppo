@@ -20,9 +20,8 @@ from model import ActorCritic
 from multiprocessing_env import SubprocVecEnv
 
 NUM_ENVS            = 4
-ENV_ID              = "snake-v0"
 HIDDEN_SIZE         = 256
-LEARNING_RATE       = 1e-5
+LEARNING_RATE       = 1e-4
 GAMMA               = 0.96
 GAE_LAMBDA          = 0.95
 PPO_EPSILON         = 0.2
@@ -185,7 +184,7 @@ if __name__ == "__main__":
             
             #mask out invalid actions, lower 
             neg_mask = (state[:,:num_outputs]>0)
-            action[neg_mask] = action.min() - 5.0
+            action[neg_mask] = action.min()-3e-3
             
             action_ = torch.argmax(action, dim=1, keepdim=True).view(NUM_ENVS)
             
