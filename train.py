@@ -185,7 +185,7 @@ if __name__ == "__main__":
             
             #mask out invalid actions, lower 
             neg_mask = (state[:,:num_outputs]>0)
-            action[neg_mask] = action.min() + 3e-8
+            action[neg_mask] = action.min() - 5.0
             
             action_ = torch.argmax(action, dim=1, keepdim=True).view(NUM_ENVS)
             
