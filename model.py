@@ -14,13 +14,21 @@ class ActorCritic(nn.Module):
         self.critic = nn.Sequential(
             nn.Linear(num_inputs, hidden_size),
             nn.ReLU(),
-            nn.Linear(hidden_size, 1)
+            nn.Linear(hidden_size, 64),
+            nn.ReLU(),
+            nn.Linear(64, 16),
+            nn.ReLU(),
+            nn.Linear(16, 1)
         )
 
         self.actor = nn.Sequential(
             nn.Linear(num_inputs, hidden_size),
             nn.ReLU(),
-            nn.Linear(hidden_size, num_outputs)
+            nn.Linear(hidden_size, 64),
+            nn.ReLU(),
+            nn.Linear(64, 16),
+            nn.ReLU(),
+            nn.Linear(16, num_outputs)
         )
         
         #random factor
