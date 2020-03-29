@@ -4,12 +4,17 @@ import random
 from kaggle_environments import evaluate, make
 
 class ConnectX(gym.Env):
-    def __init__(self, switch_prob=0.5, random_agent=False, test_mode=False):
+    def __init__(self, switch_prob=0.5, use_random_training=True, random_agent=False, test_mode=False):
         self.env = make('connectx', debug=True)
-        if random.uniform(0, 1) < 0.5:
-            self.pair = [None, 'negamax']
+        if use_random_training:
+            if random.uniform(0, 1) < 0.6:
+                self.pair = [None, 'negamax']
+                print('create negamax agent')
+            else:
+                self.pair = [None, 'random']
+                print('create random agent')
         else:
-            self.pair = [None, 'random']
+            self.pair = [None, 'negamax']
 
         #test setup
         if random_agent and test_mode:
@@ -30,7 +35,9 @@ class ConnectX(gym.Env):
         self.trainer = self.env.train(self.pair)
 
     def step(self, action):
-        return self.trainer.step(int(action))
+        state, reward, done, info = self.trainer.step(int(action))
+        reward = reward if reward==1 or reward==-1 else 0
+        return state, reward, done, info
     
     def reset(self):
         if random.uniform(0, 1) < self.switch_prob:

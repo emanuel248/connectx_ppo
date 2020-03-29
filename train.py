@@ -32,7 +32,7 @@ MINI_BATCH_SIZE     = 64
 PPO_EPOCHS          = 10
 TEST_EPOCHS         = 20
 NUM_TESTS           = 10
-TARGET_REWARD       = 2500
+TARGET_REWARD       = 1
 
 
 def make_env():
@@ -57,7 +57,7 @@ def test_env(env, model, device, deterministic=False, num_outputs=7):
 
         next_state, reward, done, _ = env.step(action)
         state = next_state
-        total_reward += 1 if reward==1 else 0
+        total_reward += reward if reward==1 or reward==-1 else 0
 #        env.render()
     return total_reward
 
@@ -142,6 +142,7 @@ if __name__ == "__main__":
     mkdir('.', 'checkpoints')
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--envs", type=int, default=NUM_ENVS, help="Number of envs")
+    parser.add_argument("--use_rand", type=bool, default=False, help="Use random agent during training")
     args = parser.parse_args()
     writer = SummaryWriter(comment="ppo_connectx")
     
@@ -153,7 +154,7 @@ if __name__ == "__main__":
     # Prepare environments
     envs = [make_env() for i in range(args.envs)]
     envs = SubprocVecEnv(envs)
-    env = ConnectX()
+    env = ConnectX(test_mode=True)
     obs_ = env.reset()
     num_inputs  = env.observation_space.n
     num_outputs  = env.action_space.n
