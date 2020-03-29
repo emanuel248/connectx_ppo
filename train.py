@@ -57,7 +57,7 @@ def test_env(env, model, device, deterministic=False, num_outputs=7):
 
         next_state, reward, done, _ = env.step(action)
         state = next_state
-        total_reward += 0 if reward is None else reward
+        total_reward += 1 if reward==1 else 0
 #        env.render()
     return total_reward
 

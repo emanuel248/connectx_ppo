@@ -5,7 +5,7 @@ from torch.distributions import Normal, Categorical
 
 
 class ActorCritic(nn.Module):
-    def __init__(self, num_inputs, num_outputs, hidden_size, std=0.0, categoric=False):
+    def __init__(self, num_inputs, num_outputs, hidden_size=256, std=0.0, categoric=False):
         super(ActorCritic, self).__init__()
 
         self.categoric = categoric

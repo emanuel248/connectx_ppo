@@ -4,9 +4,19 @@ import random
 from kaggle_environments import evaluate, make
 
 class ConnectX(gym.Env):
-    def __init__(self, switch_prob=0.5):
+    def __init__(self, switch_prob=0.5, random_agent=False, test_mode=False):
         self.env = make('connectx', debug=True)
-        self.pair = [None, 'negamax']
+        if random.uniform(0, 1) < 0.5:
+            self.pair = [None, 'negamax']
+        else:
+            self.pair = [None, 'random']
+
+        #test setup
+        if random_agent and test_mode:
+            self.pair = [None, 'random']
+        elif test_mode:
+            self.pair = [None, 'negamax']
+
         self.trainer = self.env.train(self.pair)
         self.switch_prob = switch_prob
         
