@@ -1,5 +1,6 @@
 import torch as T
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.distributions import Normal, Categorical
 
 
@@ -23,13 +24,17 @@ class ActorCritic(nn.Module):
         )
         
         #random factor
-        if not categoric:
-            self.log_std = nn.Parameter(T.ones(1, num_outputs) * std)
+        self.log_std = nn.Parameter(T.ones(1, num_outputs) * std)
 
     def forward(self, x):
         value = self.critic(x)
         mu = self.actor(x)
 
+        #mask out invalid actions, lower 
+        neg_mask = (x[:,:self.num_outputs]>0)
+        mu[neg_mask] = float('-inf')
+
+        mu = F.softmax(mu, dim=-1)
         if not self.categoric:
             std = self.log_std.exp().expand_as(mu)
             dist = Normal(mu, std)

@@ -52,10 +52,6 @@ def test_env(env, model, device, deterministic=False, num_outputs=7):
         dist, _ = model(state)
         dist_space = dist.sample()
 
-        #mask out invalid actions, lower 
-        neg_mask = (state[:,:num_outputs]>0)
-        dist_space[neg_mask] = dist_space.min()-3e-3
-
         action = torch.argmax(dist_space, dim=1, keepdim=True).cpu().numpy()[0] if deterministic \
             else torch.argmax(dist_space, dim=1, keepdim=True).cpu().numpy()[0]
 
@@ -162,7 +158,7 @@ if __name__ == "__main__":
     num_inputs  = env.observation_space.n
     num_outputs  = env.action_space.n
 
-    model = ActorCritic(num_inputs, num_outputs, HIDDEN_SIZE, std=0.001).to(device)
+    model = ActorCritic(num_inputs, num_outputs, HIDDEN_SIZE, std=-5.0).to(device)
     print(model)
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
@@ -188,17 +184,11 @@ if __name__ == "__main__":
             dist, value = model(state)
             
             action = dist.sample()
-            
-            #mask out invalid actions, lower 
-            neg_mask = (state[:,:num_outputs]>0)
-            action[neg_mask] = action.min()-3e-3
-            
             action_ = torch.argmax(action, dim=1, keepdim=True).view(args.envs)
             
             # each state, reward, done is a list of results from each parallel environment
             next_state, reward, done, _ = envs.step(action_.cpu().numpy())
             log_prob = dist.log_prob(action)
-            log_prob[neg_mask] = log_prob.min()-3e-3
             
             log_probs.append(log_prob)
             values.append(value)
